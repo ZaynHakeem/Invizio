@@ -1,8 +1,6 @@
-# StockMaster Pro
+# Invizio: Inventory Tracking App
 
 A streamlined inventory management system built for small businesses and individual entrepreneurs to monitor stock levels, track item details, and get low-stock alerts in real-time.
-
-Live (AI Studio): https://ai.studio/apps/drive/1yEvkREAGO--gnZGlXMsel8ZBN81slD8u
 
 ---
 
