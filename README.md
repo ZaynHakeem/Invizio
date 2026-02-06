@@ -61,21 +61,6 @@ Prerequisites:
 
 ---
 
-## Environment variables
-
-vite.config.ts loads environment variables using Vite's loadEnv. The repo wires GEMINI_API_KEY into the client bundle as:
-- process.env.API_KEY
-- process.env.GEMINI_API_KEY
-
-To set it locally, create `.env.local`:
-```
-GEMINI_API_KEY=your_api_key_here
-```
-
-Be careful: adding sensitive keys into the client bundle exposes them to browsers. Only use public-safe values here. For private API keys, route requests through a server.
-
----
-
 ## Data model
 
 The app stores inventory items in localStorage under the key `invizio_items`. Each item conforms to the following shape:
