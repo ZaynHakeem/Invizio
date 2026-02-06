@@ -78,7 +78,7 @@ Be careful: adding sensitive keys into the client bundle exposes them to browser
 
 ## Data model
 
-The app stores inventory items in localStorage under the key `stockmaster_items`. Each item conforms to the following shape:
+The app stores inventory items in localStorage under the key `invizio_items`. Each item conforms to the following shape:
 
 Example InventoryItem JSON:
 ```json
@@ -104,7 +104,7 @@ Fields:
 - minStockLevel (number): threshold for low-stock alert
 - updatedAt (string, ISO): last update timestamp
 
-Default/initial mock data lives in App.tsx and will be used only on first run (when `stockmaster_items` is not found in localStorage).
+Default/initial mock data lives in App.tsx and will be used only on first run (when `invizio_items` is not found in localStorage).
 
 ---
 
@@ -129,7 +129,7 @@ server: {
 To reset the app data (clear all inventory items):
 - In the browser console:
   ```js
-  localStorage.removeItem('stockmaster_items')
+  localStorage.removeItem('invizio_items')
   location.reload()
   ```
 
@@ -159,7 +159,7 @@ Note: If your host requires a different base path or router support, adjust Vite
 - "Could not find root element to mount to" — Ensure `index.html` contains `<div id="root"></div>`. This is present by default in the repo.
 - Port in use — Change `port` in `vite.config.ts` or stop the conflicting service.
 - Environment variables not loaded — Vite reads env files by mode. Use `.env`, `.env.local`, or pass variables when running `vite`.
-- Changes not persisting — Inventory is stored in localStorage (`stockmaster_items`). Clearing cache or using `removeItem` (see Development notes) resets it.
+- Changes not persisting — Inventory is stored in localStorage (`invizio_items`). Clearing cache or using `removeItem` (see Development notes) resets it.
 
 ---
 
