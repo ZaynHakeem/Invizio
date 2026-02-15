@@ -18,6 +18,7 @@ import {
   SearchX,
   TrendingUp,
   ShieldCheck,
+  SquareLibrary,
   ChevronDown,
   PlusCircle,
   PieChart as PieIcon,
@@ -53,13 +54,19 @@ const COLORS = [
   '#C5A028', // Deep Gold
   '#E5C76B', // Soft Brass
   '#A67C00', // Dark Gold
+  '#CD853F', // Peru
+  '#DAA520', // Goldenrod
+  '#B8956A', // Tan
+  '#C9AE5D', // Vegas Gold
+  '#F0E68C', // Khaki
+  '#BDB76B', // Dark Khaki
 ];
 
 const INITIAL_DATA: InventoryItem[] = [
-  { id: '1', sku: 'IV-772', name: 'Titanium Core Server', category: 'Infrastructure', quantity: 12, price: 4500, description: 'High-availability core processing unit', minStockLevel: 5, updatedAt: new Date().toISOString() },
-  { id: '2', sku: 'IV-104', name: 'Neural Link Module', category: 'Interfaces', quantity: 84, price: 299, description: 'Low-latency neural interface', minStockLevel: 20, updatedAt: new Date().toISOString() },
-  { id: '3', sku: 'IV-909', name: 'Quantum Storage Array', category: 'Storage', quantity: 3, price: 12500, description: 'Petabyte-scale quantum persistence', minStockLevel: 5, updatedAt: new Date().toISOString() },
-  { id: '4', sku: 'IV-002', name: 'Biometric Scanner', category: 'Security', quantity: 0, price: 850, description: 'Iris and vein authentication hardware', minStockLevel: 10, updatedAt: new Date().toISOString() },
+  { id: '1', sku: 'IV-772', name: 'Wireless Mouse', category: 'Electronics', quantity: 12, price: 45.00, description: 'Ergonomic 2.4GHz wireless mouse with precision optical tracking', minStockLevel: 5, updatedAt: new Date().toISOString() },
+  { id: '2', sku: 'IV-104', name: 'Pasta', category: 'Groceries', quantity: 84, price: 2.99, description: 'Premium Italian durum wheat pasta, 500g package', minStockLevel: 20, updatedAt: new Date().toISOString() },
+  { id: '3', sku: 'IV-909', name: 'Trash Bags', category: 'Home & Kitchen', quantity: 3, price: 12.50, description: 'Heavy-duty tear-resistant garbage bags, 50-count box', minStockLevel: 5, updatedAt: new Date().toISOString() },
+  { id: '4', sku: 'IV-002', name: 'Denim Jeans', category: 'Clothing', quantity: 0, price: 85.00, description: 'Classic fit blue denim jeans, size 32x32', minStockLevel: 10, updatedAt: new Date().toISOString() },
 ];
 
 const App: React.FC = () => {
@@ -198,6 +205,13 @@ const App: React.FC = () => {
     }
   };
 
+  const resetToDefaults = () => {
+    if (confirm('⚠️ Reset vault to factory defaults? All custom data will be permanently erased.')) {
+      localStorage.removeItem(STORAGE_KEY);
+      setItems(INITIAL_DATA);
+    }
+  };
+
   const handleSuggestionClick = (id: string) => {
     const item = items.find(i => i.id === id);
     if (item) {
@@ -273,7 +287,7 @@ const App: React.FC = () => {
           <div className="flex items-center justify-between mb-16 px-2">
             <div className="flex items-center space-x-4">
               <div className="bg-gradient-to-br from-[#D4AF37] to-[#B8860B] p-2.5 rounded-2xl">
-                <ShieldCheck className="text-black" size={24} strokeWidth={2.5} />
+                <SquareLibrary className="text-black" size={24} strokeWidth={2.5} />
               </div>
               <div>
                 <h1 className="text-2xl font-black tracking-tighter uppercase leading-none">INVIZIO</h1>
@@ -291,15 +305,34 @@ const App: React.FC = () => {
             <NavItem view="alerts" icon={AlertTriangle} label="Status Alerts" badge={stats.lowStockCount} />
           </nav>
 
-          <div className="mt-auto group">
-            <div className="p-6 lg:p-8 bg-zinc-900/30 rounded-[2.5rem] border border-zinc-800/50 relative overflow-hidden transition-all hover:border-[#D4AF37]/30">
-              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Vault Valuation</p>
-              <p className="text-2xl lg:text-3xl font-black text-[#D4AF37] tracking-tighter truncate">${stats.totalValue.toLocaleString()}</p>
-              <div className="flex items-center mt-4 text-[9px] font-bold text-emerald-500 space-x-1">
-                <Activity size={12} />
-                <span>Synchronized Offline</span>
+          <div className="mt-auto space-y-4">
+            {/* Valuation Card */}
+            <div className="group">
+              <div className="p-6 lg:p-8 bg-zinc-900/30 rounded-[2.5rem] border border-zinc-800/50 relative overflow-hidden transition-all hover:border-[#D4AF37]/30">
+                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Vault Valuation</p>
+                <p className="text-2xl lg:text-3xl font-black text-[#D4AF37] tracking-tighter truncate">${stats.totalValue.toLocaleString()}</p>
+                <div className="flex items-center mt-4 text-[9px] font-bold text-emerald-500 space-x-1">
+                  <Activity size={12} />
+                  <span>Live Update</span>
+                </div>
               </div>
             </div>
+
+            {/* Reset Button */}
+            <button
+              onClick={resetToDefaults}
+              className="w-full px-6 py-4 bg-zinc-900/30 hover:bg-rose-500/10 border border-zinc-800/50 hover:border-rose-500/30 rounded-2xl transition-all group text-left"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] font-black text-zinc-600 group-hover:text-rose-500 uppercase tracking-widest transition-colors">Factory Reset</p>
+                  <p className="text-[10px] font-bold text-zinc-700 group-hover:text-rose-400 mt-1 transition-colors">Restore Defaults</p>
+                </div>
+                <div className="w-8 h-8 bg-zinc-900/50 group-hover:bg-rose-500/20 rounded-lg flex items-center justify-center transition-all">
+                  <X size={14} className="text-zinc-600 group-hover:text-rose-500 transition-colors" />
+                </div>
+              </div>
+            </button>
           </div>
         </div>
       </aside>
@@ -419,7 +452,7 @@ const App: React.FC = () => {
                             <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse" />
                             <span>Executive Donut</span>
                           </h3>
-                          <p className="text-[9px] text-zinc-600 font-bold mt-2 uppercase tracking-widest leading-none">Portfolio Mix By Asset Value</p>
+                          <p className="text-[9px] text-zinc-600 font-bold mt-2 uppercase tracking-widest leading-none">Asset Distribution</p>
                         </div>
                         <div className="flex items-center space-x-2 bg-black/50 px-3 py-1.5 rounded-full border border-zinc-800/50">
                           <Activity size={12} className="text-[#D4AF37]" />
@@ -438,10 +471,11 @@ const App: React.FC = () => {
                                 cy="50%"
                                 innerRadius={85}
                                 outerRadius={115}
-                                paddingAngle={6}
+                                paddingAngle={3}
                                 dataKey="value"
-                                cornerRadius={12}
+                                cornerRadius={6}
                                 stroke="none"
+                                minAngle={5}
                                 onMouseEnter={(_, index) => setPieActiveIndex(index)}
                                 onMouseLeave={() => setPieActiveIndex(undefined)}
                               >
