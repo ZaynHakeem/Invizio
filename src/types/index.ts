@@ -11,12 +11,3 @@ export interface InventoryItem {
 }
 
 export type ViewType = 'dashboard' | 'inventory' | 'alerts';
-
-export interface DashboardStats {
-  totalItems: number;
-  totalValue: number;
-  lowStockCount: number;
-  outOfStockCount: number;
-  categoryData: { name: string; value: number }[];
-  topItems: { name: string; value: number }[];
-}

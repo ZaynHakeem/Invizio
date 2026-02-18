@@ -1,9 +1,7 @@
-import { InventoryItem } from '../types';
+import type { InventoryItem } from '../types';
 
 export const STORAGE_KEY = 'invizio_vault_data_v2';
-
 export const GOLD = '#D4AF37';
-
 export const COLORS = [
   '#D4AF37', // Gold
   '#F5E1A4', // Gold Light
