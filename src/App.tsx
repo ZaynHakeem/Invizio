@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import type { InventoryItem, ViewType } from './types';
 import { useInventory } from './hooks/useInventory';
 import { useClickOutside } from './hooks/useClickOutside';
-import { computeInventoryStats, filterItemsBySearch, createNewInventoryItem } from './utils/inventoryUtils';
+import { computeInventoryStats, filterItemsBySearch } from './utils/inventoryUtils';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -12,7 +12,7 @@ import { AlertsView } from './components/AlertsView';
 import { RegistryModal } from './components/RegistryModal';
 
 const App: React.FC = () => {
-  const { items, setItems, loading, resetToDefaults } = useInventory();
+  const { items, loading, resetToDefaults, createItem, updateItem, deleteItem } = useInventory();
 
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -46,7 +46,7 @@ const App: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveItem = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveItem = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
@@ -54,27 +54,27 @@ const App: React.FC = () => {
     const quantity = Number(formData.get('quantity'));
     const price = Number(formData.get('price'));
     const minStockLevel = Number(formData.get('minStockLevel'));
+    const payload = { name, category, quantity, price, minStockLevel };
 
-    if (editingItem) {
-      setItems(prev =>
-        prev.map(i =>
-          i.id === editingItem.id
-            ? { ...i, name, category, quantity, price, minStockLevel, updatedAt: new Date().toISOString() }
-            : i
-        )
-      );
-    } else {
-      const newItem = createNewInventoryItem({ name, category, quantity, price, minStockLevel });
-      setItems(prev => [...prev, newItem]);
+    try {
+      if (editingItem) {
+        await updateItem(editingItem.id, payload);
+      } else {
+        await createItem(payload);
+      }
+      setIsModalOpen(false);
+      setEditingItem(null);
+    } catch {
+      // Optionally show error to user
     }
-
-    setIsModalOpen(false);
-    setEditingItem(null);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Permanently wipe this record from the local vault?')) {
-      setItems(prev => prev.filter(i => i.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm('Permanently wipe this record from the local vault?')) return;
+    try {
+      await deleteItem(id);
+    } catch {
+      // Optionally show error to user
     }
   };
 
