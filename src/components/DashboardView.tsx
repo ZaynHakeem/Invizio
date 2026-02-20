@@ -22,7 +22,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   <div className="space-y-12 lg:space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
       <StatsCard
-        label="Entities"
+        label="Assets"
         val={stats.totalItems}
         icon={Layers}
         color="text-[#D4AF37]"
