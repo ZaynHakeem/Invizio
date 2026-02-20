@@ -44,7 +44,7 @@ export const RegistryModal: React.FC<RegistryModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <div className="col-span-full">
               <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ml-4 mb-3 block">Entity Name</label>
-              <input required name="name" defaultValue={editingItem?.name} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-lg tracking-tight" placeholder="ID-ALPHA ENTITY" />
+              <input required name="name" defaultValue={editingItem?.name} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-lg tracking-tight" placeholder="ASSET NAME" />
             </div>
 
             <div className="col-span-full">
@@ -84,7 +84,7 @@ export const RegistryModal: React.FC<RegistryModalProps> = ({
             </div>
 
             <div>
-              <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ml-4 mb-3 block">Unit Value (USD)</label>
+              <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ml-4 mb-3 block">Asset Value (USD)</label>
               <input required name="price" type="number" step="0.01" defaultValue={editingItem?.price} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="0.00" />
             </div>
             <div>
@@ -92,7 +92,7 @@ export const RegistryModal: React.FC<RegistryModalProps> = ({
               <input required name="quantity" type="number" defaultValue={editingItem?.quantity} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="0" />
             </div>
             <div className="col-span-full md:col-span-1">
-              <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ml-4 mb-3 block">Threshold</label>
+              <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ml-4 mb-3 block">Min. Stock Level</label>
               <input required name="minStockLevel" type="number" defaultValue={editingItem?.minStockLevel} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="10" />
             </div>
           </div>
