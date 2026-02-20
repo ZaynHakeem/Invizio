@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { InventoryItem } from '../types';
 
+/** API base URL. Set VITE_API_URL in production (e.g. Vercel env) to your deployed API. */
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export function useInventory(): {
