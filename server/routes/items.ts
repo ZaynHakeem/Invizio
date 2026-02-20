@@ -15,7 +15,7 @@ router.get('/', async (_req: Request, res: Response) => {
   }
 });
 
-/** POST /api/items - create item (id/sku generated if not provided) */
+/** POST /api/items - create item (id/sku generated via createNewItem) */
 router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, category, quantity, price, minStockLevel, description } = req.body;
@@ -30,7 +30,8 @@ router.post('/', async (req: Request, res: Response) => {
       minStockLevel: Number(minStockLevel),
       description: description != null ? String(description) : undefined,
     });
-    await InventoryItemModel.create(item);
+    const doc = { ...item, _id: item.id };
+    await InventoryItemModel.create(doc);
     res.status(201).json(item);
   } catch (err) {
     console.error(err);
@@ -42,7 +43,8 @@ router.post('/', async (req: Request, res: Response) => {
 router.post('/seed', async (_req: Request, res: Response) => {
   try {
     await InventoryItemModel.deleteMany({});
-    await InventoryItemModel.insertMany(INITIAL_DATA);
+    const docs = INITIAL_DATA.map((item) => ({ ...item, _id: item.id }));
+    await InventoryItemModel.insertMany(docs);
     const items = await InventoryItemModel.find().sort({ updatedAt: -1 });
     res.status(200).json(items);
   } catch (err) {

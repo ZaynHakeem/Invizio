@@ -1,6 +1,7 @@
 import mongoose, { Schema, Model } from 'mongoose';
 
 export interface IInventoryItem {
+  _id: string;
   id: string;
   sku: string;
   name: string;
@@ -14,6 +15,7 @@ export interface IInventoryItem {
 
 const inventoryItemSchema = new Schema<IInventoryItem>(
   {
+    _id: { type: String, required: true },
     id: { type: String, required: true, unique: true },
     sku: { type: String, required: true },
     name: { type: String, required: true },
@@ -24,7 +26,7 @@ const inventoryItemSchema = new Schema<IInventoryItem>(
     minStockLevel: { type: Number, required: true },
     updatedAt: { type: String, required: true },
   },
-  { _id: false }
+  { id: false }
 );
 
 export const InventoryItemModel: Model<IInventoryItem> =
