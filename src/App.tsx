@@ -158,7 +158,7 @@ const App: React.FC = () => {
           onOpenSidebar={() => setIsSidebarOpen(true)}
         />
 
-        <div className="p-4 lg:p-12 max-w-7xl mx-auto w-full flex-1">
+        <div className="p-4 lg:p-12 max-w-7xl mx-auto w-full flex-1 min-h-0 overflow-y-auto">
           {loading ? (
             <LoadingScreen />
           ) : (
