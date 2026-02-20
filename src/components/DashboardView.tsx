@@ -33,8 +33,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         label="Market Value"
         val={`$${stats.totalValue.toLocaleString()}`}
         icon={DollarSign}
-        color="text-[#D4AF37]"
-        bg="bg-[#D4AF37]/5"
+        color="text-emerald-500"
+        bg="bg-emerald-500/5"
         onClick={() => onSelectView('inventory')}
       />
       <StatsCard
