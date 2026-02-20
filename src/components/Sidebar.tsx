@@ -9,7 +9,8 @@ export interface SidebarProps {
   onCloseSidebar: () => void;
   totalValue: number;
   lowStockCount: number;
-  onResetToDefaults: () => void;
+  onResetToDefaults: () => void | Promise<void>;
+  isResetting?: boolean;
   isSidebarOpen: boolean;
 }
 
@@ -20,6 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   totalValue,
   lowStockCount,
   onResetToDefaults,
+  isResetting = false,
   isSidebarOpen,
 }) => (
   <>
@@ -63,16 +65,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onResetToDefaults}
-            className="w-full px-6 py-4 bg-zinc-900/30 hover:bg-rose-500/10 border border-zinc-800/50 hover:border-rose-500/30 rounded-2xl transition-all group text-left"
+            disabled={isResetting}
+            className="w-full px-6 py-4 bg-zinc-900/30 hover:bg-rose-500/10 border border-zinc-800/50 hover:border-rose-500/30 rounded-2xl transition-all group text-left disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-zinc-900/30 disabled:hover:border-zinc-800/50"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[9px] font-black text-zinc-600 group-hover:text-rose-500 uppercase tracking-widest transition-colors">Factory Reset</p>
-                <p className="text-[10px] font-bold text-zinc-700 group-hover:text-rose-400 mt-1 transition-colors">Restore Defaults</p>
+                <p className="text-[9px] font-black text-zinc-600 group-hover:text-rose-500 uppercase tracking-widest transition-colors">
+                  {isResetting ? 'Resetting...' : 'Factory Reset'}
+                </p>
+                <p className="text-[10px] font-bold text-zinc-700 group-hover:text-rose-400 mt-1 transition-colors">
+                  {isResetting ? 'Please wait' : 'Restore Defaults'}
+                </p>
               </div>
-              <div className="w-8 h-8 bg-zinc-900/50 group-hover:bg-rose-500/20 rounded-lg flex items-center justify-center transition-all">
-                <X size={14} className="text-zinc-600 group-hover:text-rose-500 transition-colors" />
+              <div className="w-8 h-8 bg-zinc-900/50 group-hover:bg-rose-500/20 rounded-lg flex items-center justify-center transition-all shrink-0">
+                {isResetting ? (
+                  <span className="w-4 h-4 border-2 border-zinc-600 border-t-rose-500 rounded-full animate-spin" />
+                ) : (
+                  <X size={14} className="text-zinc-600 group-hover:text-rose-500 transition-colors" />
+                )}
               </div>
             </div>
           </button>

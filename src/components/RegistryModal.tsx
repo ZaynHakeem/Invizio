@@ -12,6 +12,7 @@ export interface RegistryModalProps {
   onCategoryChange: (value: string) => void;
   onNewCategoryModeChange: (value: boolean) => void;
   onSave: (e: React.FormEvent<HTMLFormElement>) => void;
+  isSaving?: boolean;
 }
 
 export const RegistryModal: React.FC<RegistryModalProps> = ({
@@ -24,6 +25,7 @@ export const RegistryModal: React.FC<RegistryModalProps> = ({
   onCategoryChange,
   onNewCategoryModeChange,
   onSave,
+  isSaving = false,
 }) => {
   if (!isOpen) return null;
 
@@ -85,19 +87,30 @@ export const RegistryModal: React.FC<RegistryModalProps> = ({
 
             <div>
               <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ml-4 mb-3 block">Asset Value (USD)</label>
-              <input required name="price" type="number" step="0.01" defaultValue={editingItem?.price} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="0.00" />
+              <input required name="price" type="number" step="0.01" min={0} defaultValue={editingItem?.price} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="0.00" />
             </div>
             <div>
               <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ml-4 mb-3 block">Quantity</label>
-              <input required name="quantity" type="number" defaultValue={editingItem?.quantity} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="0" />
+              <input required name="quantity" type="number" min={0} step={1} defaultValue={editingItem?.quantity} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="0" />
             </div>
             <div className="col-span-full md:col-span-1">
               <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest ml-4 mb-3 block">Min. Stock Level</label>
-              <input required name="minStockLevel" type="number" defaultValue={editingItem?.minStockLevel} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="10" />
+              <input required name="minStockLevel" type="number" min={0} step={1} defaultValue={editingItem?.minStockLevel} className="w-full px-6 py-4 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl focus:bg-black focus:border-[#D4AF37]/40 outline-none transition-all font-black text-white text-xs" placeholder="10" />
             </div>
           </div>
-          <button type="submit" className="w-full py-6 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-black rounded-[2rem] shadow-xl transition-all active:scale-95 text-[10px] uppercase tracking-widest mt-6">
-            {editingItem ? 'Confirm Updates' : 'Authorize Entry'}
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="w-full py-6 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-black rounded-[2rem] shadow-xl transition-all active:scale-95 text-[10px] uppercase tracking-widest mt-6 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2"
+          >
+            {isSaving ? (
+              <>
+                <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              editingItem ? 'Confirm Updates' : 'Authorize Entry'
+            )}
           </button>
         </form>
       </div>

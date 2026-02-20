@@ -14,7 +14,17 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   stats,
   pieActiveIndex,
   onPieActiveIndexChange,
-}) => (
+}) => {
+  const categoryData = stats.categoryData ?? [];
+  const activeEntry =
+    categoryData.length > 0 &&
+    pieActiveIndex !== undefined &&
+    pieActiveIndex >= 0 &&
+    pieActiveIndex < categoryData.length
+      ? categoryData[pieActiveIndex]
+      : null;
+
+  return (
   <div className="lg:col-span-7 bg-zinc-900/10 p-8 lg:p-12 rounded-[3rem] lg:rounded-[4rem] border border-zinc-800/50 shadow-2xl overflow-hidden group">
     <div className="flex items-center justify-between mb-10">
       <div>
@@ -35,7 +45,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={stats.categoryData}
+              data={categoryData}
               cx="50%"
               cy="50%"
               innerRadius={85}
@@ -48,7 +58,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
               onMouseEnter={(_, index) => onPieActiveIndexChange(index)}
               onMouseLeave={() => onPieActiveIndexChange(undefined)}
             >
-              {stats.categoryData.map((_, index) => (
+              {categoryData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -56,16 +66,16 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
         </ResponsiveContainer>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-          {pieActiveIndex !== undefined ? (
+          {activeEntry ? (
             <div className="animate-in fade-in zoom-in-90 duration-300">
               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                {stats.categoryData[pieActiveIndex].name}
+                {activeEntry.name}
               </p>
               <p className="text-xl lg:text-2xl font-black text-white tracking-tighter">
-                ${stats.categoryData[pieActiveIndex].value.toLocaleString()}
+                ${activeEntry.value.toLocaleString()}
               </p>
               <p className="text-[10px] font-black text-[#D4AF37] mt-1">
-                {((stats.categoryData[pieActiveIndex].value / (stats.totalValue || 1)) * 100).toFixed(1)}%
+                {((activeEntry.value / (stats.totalValue || 1)) * 100).toFixed(1)}%
               </p>
             </div>
           ) : (
@@ -81,7 +91,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
       </div>
 
       <div className="w-full space-y-2 lg:space-y-3 max-h-[300px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-zinc-800">
-        {stats.categoryData.map((entry, index) => {
+        {categoryData.map((entry, index) => {
           const pct = ((entry.value / (stats.totalValue || 1)) * 100).toFixed(1);
           const isActive = pieActiveIndex === index;
           return (
@@ -112,4 +122,5 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
       </div>
     </div>
   </div>
-);
+  );
+};

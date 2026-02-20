@@ -10,8 +10,13 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-await mongoose.connect(MONGODB_URI);
-console.log('MongoDB connected');
+try {
+  await mongoose.connect(MONGODB_URI);
+} catch (err) {
+  const message = err instanceof Error ? err.message : String(err);
+  console.error('Failed to connect to MongoDB:', message);
+  process.exit(1);
+}
 
 const app = express();
 
@@ -35,6 +40,4 @@ app.get('/api/health', (_req, res) => {
 });
 
 const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+app.listen(PORT);
