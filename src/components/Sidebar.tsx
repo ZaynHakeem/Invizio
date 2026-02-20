@@ -48,14 +48,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <nav className="flex-1 space-y-3">
           <NavItem view="dashboard" icon={LayoutDashboard} label="Overview" activeView={activeView} onSelect={onSelectView} />
-          <NavItem view="inventory" icon={Package} label="Ledger" activeView={activeView} onSelect={onSelectView} />
+          <NavItem view="inventory" icon={Package} label="Assets" activeView={activeView} onSelect={onSelectView} />
           <NavItem view="alerts" icon={AlertTriangle} label="Status Alerts" badge={lowStockCount} activeView={activeView} onSelect={onSelectView} />
         </nav>
 
         <div className="mt-auto space-y-4">
           <div className="group">
             <div className="p-6 lg:p-8 bg-zinc-900/30 rounded-[2.5rem] border border-zinc-800/50 relative overflow-hidden transition-all hover:border-[#D4AF37]/30">
-              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Vault Valuation</p>
+              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-2">Total Asset Value</p>
               <p className="text-2xl lg:text-3xl font-black text-[#D4AF37] tracking-tighter truncate">${totalValue.toLocaleString()}</p>
               <div className="flex items-center mt-4 text-[9px] font-bold text-emerald-500 space-x-1">
                 <Activity size={12} />
