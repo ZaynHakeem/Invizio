@@ -2,6 +2,11 @@
 
 Invizio is a premium-styled inventory ledger that lets you register items, track stock levels, and monitor low-stock / out-of-stock alerts with a dashboard of charts and KPIs.
 
+### Live Demo
+
+- **Frontend (Vercel):** [https://invizio.vercel.app](https://invizio.vercel.app)
+- **Backend API (Render):** [https://invizio-api.onrender.com](https://invizio-api.onrender.com)
+
 ---
 
 ## Tech stack
