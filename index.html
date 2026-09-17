@@ -1,13 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invizio - Premium Inventory Vault</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-</head>
-<body class="bg-black text-white selection:bg-[#D4AF37] selection:text-black">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Invizio brings clarity to your inventory. Track items, understand stock levels, and see what needs attention."
+    />
+    <title>Invizio · Inventory, in order</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      (() => {
+        let theme = "system";
+        try {
+          theme = localStorage.getItem("invizio-theme") || "system";
+        } catch {}
+        document.documentElement.dataset.theme =
+          theme === "dark" || theme === "light"
+            ? theme
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+      })();
+    </script>
+  </head>
+  <body>
     <div id="root"></div>
+    <noscript
+      >Invizio needs JavaScript to display and manage your inventory. Enable
+      JavaScript, then reload this page.</noscript
+    >
     <script type="module" src="/index.tsx"></script>
-</body>
+  </body>
 </html>

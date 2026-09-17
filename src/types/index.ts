@@ -10,4 +10,11 @@ export interface InventoryItem {
   updatedAt: string;
 }
 
-export type ViewType = 'dashboard' | 'inventory' | 'alerts';
+export type ViewType = "dashboard" | "inventory" | "alerts";
+
+export type ItemInput = Pick<
+  InventoryItem,
+  "name" | "category" | "quantity" | "price" | "description" | "minStockLevel"
+>;
+export type StockStatus = "in" | "low" | "out";
+export type FieldErrors = Partial<Record<keyof ItemInput, string>>;

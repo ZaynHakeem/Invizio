@@ -1,1 +1,43 @@
-{"compilerOptions":{"target":"ES2022","experimentalDecorators":true,"useDefineForClassFields":false,"module":"ESNext","lib":["ES2022","DOM","DOM.Iterable"],"skipLibCheck":true,"types":["node","vite/client"],"moduleResolution":"bundler","isolatedModules":true,"moduleDetection":"force","allowJs":true,"jsx":"react-jsx","paths":{"@/*":["./*"]},"allowImportingTsExtensions":true,"noEmit":true}}
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "types": [
+      "node",
+      "vite/client"
+    ],
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "src",
+    "index.tsx",
+    "vite.config.ts",
+    "tests"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

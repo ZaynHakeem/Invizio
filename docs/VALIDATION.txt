@@ -1,0 +1,52 @@
+Invizio redesign — local validation
+
+Commands completed successfully:
+  npm run typecheck (frontend and existing server)
+  npm test (31 passed; 0 failed)
+  npm run build (Vite production build)
+
+Test outcomes:
+✔ account preview validates inline and never creates a fake session (313.483073ms)
+✔ switching theme preserves draft fields; failed validation keeps description (1692.892759ms)
+✔ demo create and edit persist every field and report success (750.147989ms)
+✔ preview initial failure and empty success never collapse into the same screen (683.687019ms)
+✔ timed-out edit retains its draft when closed, then resolves by a read (752.424146ms)
+✔ confirmed save with failed reload closes the form and reports stale data (331.625472ms)
+✔ delete names the item and requires an explicit confirmation (269.218295ms)
+✔ factory reset is disabled until RESET is typed and replaces the sample inventory (274.146599ms)
+✔ stock boundaries and totals keep low and zero stock distinct (9.898989ms)
+✔ response schema accepts a real empty array and rejects malformed or duplicate records (1.764439ms)
+✔ form validation does not coerce missing, negative, or fractional stock values (0.597634ms)
+✔ a valid 200 [] reaches ready; initial failure has no snapshot (12.286056ms)
+✔ a transient GET retries once, while access errors and malformed JSON do not (20.350406ms)
+✔ rate-limit cooldown blocks early manual retry without hammering the API (1.409157ms)
+✔ read timeout is bounded and retries once; deliberate cancellation never retries (18.714324ms)
+✔ writes retain description and never retry an ambiguous response (1.605763ms)
+✔ write timeouts are uncertain and malformed 2xx bodies cannot claim success (9.163056ms)
+✔ validation rejection maps inline errors; DELETE 204 succeeds without parsing JSON (2.431067ms)
+✔ refresh failures preserve both populated and genuinely empty snapshots (0.825622ms)
+✔ confirmed create and failed refresh stay successful; retry only reads (2.958632ms)
+✔ confirmed update, delete, and reset apply their returned result before a failed refresh (1.839101ms)
+✔ an old GET cannot overwrite a newer read or confirmed mutation (1.646277ms)
+✔ an uncertain create stays blocked after finding a matching item (7.366128ms)
+✔ uncertain update reconciles by ID and full desired values (1.005828ms)
+✔ uncertain delete resolves only when that ID is absent; reset always needs review (0.627305ms)
+✔ failed status checks retain uncertainty and cannot authorize another write (2.141038ms)
+✔ new user with successful [] is empty, never All stocked (21.395212ms)
+✔ All stocked requires a nonempty fresh successful snapshot (7.360427ms)
+✔ stale empty inventory is historical and missing dashboard data is unknown (8.602904ms)
+✔ no search matches offers filter recovery rather than empty-inventory messaging (10.66692ms)
+✔ navigation exposes the combined low/out count and unknown count separately (25.10799ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9600.435042
+
+Browser visual QA: deferred by agreement.
+DOM tests use Happy DOM and do not verify layout, focus trapping in a real browser, chart dimensions, or screen-reader behavior.
+No real inventory API or MongoDB database was modified during validation.
+Authentication is a frontend preview; connect accounts and server-side ownership separately.

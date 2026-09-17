@@ -1,162 +1,460 @@
-import React from 'react';
-import { Edit2, Trash2, SearchX } from 'lucide-react';
-import type { InventoryItem } from '../types';
-
-export interface InventoryViewProps {
-  filteredItems: InventoryItem[];
-  onEditItem: (item: InventoryItem) => void;
-  onDeleteItem: (id: string) => void;
-  onClearSearch: () => void;
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
+import {
+  ArrowDownUp,
+  ArrowUpRight,
+  Pencil,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+  X,
+} from "lucide-react";
+import { money, number, searchItems, stockStatus } from "../domain/inventory";
+import type { InventoryItem } from "../types";
+import { EmptyState, StockBadge } from "./UI";
+export interface Filters {
+  query: string;
+  category: string;
+  stock: string;
+  sort: string;
 }
-
-function StatusBadge({ item }: { item: InventoryItem }) {
-  const status = item.quantity === 0 ? 'Depleted' : item.quantity <= item.minStockLevel ? 'Critical' : 'Operational';
-  const style = item.quantity === 0
-    ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-    : item.quantity <= item.minStockLevel
-      ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-      : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-  return (
-    <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full border ${style}`}>
-      <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-      <span className="text-[9px] font-black uppercase tracking-widest">{status}</span>
-    </div>
+export const defaultFilters: Filters = {
+  query: "",
+  category: "",
+  stock: "",
+  sort: "name",
+};
+export function InventoryView({
+  items,
+  stale,
+  filters,
+  setFilters,
+  onAdd,
+  onEdit,
+  onDelete,
+  disabled,
+}: {
+  items: InventoryItem[];
+  stale: boolean;
+  filters: Filters;
+  setFilters: (filters: Filters) => void;
+  onAdd: () => void;
+  onEdit: (item: InventoryItem) => void;
+  onDelete: (item: InventoryItem) => void;
+  disabled: boolean;
+}) {
+  const [suggestions, setSuggestions] = useState(false);
+  const [active, setActive] = useState(-1);
+  const [page, setPage] = useState(1);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const categories = [...new Set(items.map((item) => item.category))].sort();
+  const suggested = searchItems(items, filters.query).slice(0, 5);
+  const filtered = useMemo(
+    () =>
+      searchItems(items, filters.query)
+        .filter(
+          (item) =>
+            (!filters.category || item.category === filters.category) &&
+            (!filters.stock ||
+              (filters.stock === "attention"
+                ? stockStatus(item) !== "in"
+                : stockStatus(item) === filters.stock)),
+        )
+        .sort((a, b) =>
+          filters.sort === "quantity"
+            ? a.quantity - b.quantity
+            : filters.sort === "value"
+              ? b.quantity * b.price - a.quantity * a.price
+              : filters.sort === "updated"
+                ? Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
+                : a.name.localeCompare(b.name),
+        ),
+    [items, filters],
   );
-}
-
-function VolumeBar({ item }: { item: InventoryItem }) {
-  const width = Math.min((item.quantity / (item.minStockLevel * 2.5 + 1)) * 100, 100);
-  const barColor = item.quantity === 0 ? 'bg-rose-600' : item.quantity <= item.minStockLevel ? 'bg-amber-600' : 'bg-[#D4AF37]';
-  return (
-    <div className="flex flex-col items-center">
-      <span className="text-base font-black text-white">{item.quantity}</span>
-      <div className="h-1 w-24 bg-zinc-900 rounded-full mt-2 overflow-hidden">
-        <div className={`h-full transition-all duration-1000 ${barColor}`} style={{ width: `${width}%` }} />
+  const totalPages = Math.max(1, Math.ceil(filtered.length / 20));
+  const currentPage = Math.min(page, totalPages);
+  useEffect(() => setPage(1), [filters]);
+  useEffect(() => {
+    const close = (e: PointerEvent) => {
+      if (!searchRef.current?.contains(e.target as Node)) setSuggestions(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
+  function choose(item: InventoryItem) {
+    setFilters({ ...filters, query: item.sku, category: "", stock: "" });
+    setSuggestions(false);
+    setActive(-1);
+    inputRef.current?.focus();
+  }
+  function keyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") {
+      setSuggestions(false);
+      setActive(-1);
+    }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setSuggestions(true);
+      setActive((old) =>
+        e.key === "ArrowDown"
+          ? Math.min(old + 1, suggested.length - 1)
+          : Math.max(old - 1, 0),
+      );
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (suggestions && active >= 0 && suggested[active])
+        choose(suggested[active]);
+      else setSuggestions(false);
+    }
+  }
+  const clear = () => setFilters({ ...defaultFilters, sort: filters.sort });
+  const open = suggestions && !!filters.query.trim() && suggested.length > 0;
+  if (!items.length)
+    return (
+      <div className="panel">
+        <EmptyState
+          title={
+            stale
+              ? "No items in your last update"
+              : "Your inventory starts here."
+          }
+          action={
+            <button
+              className="button primary"
+              onClick={onAdd}
+              disabled={disabled}
+            >
+              <Plus size={17} />
+              Add your first item
+            </button>
+          }
+        >
+          <p>
+            {stale
+              ? "Refresh to confirm whether this workspace is still empty."
+              : "Add an item, set its stock level, and we’ll help you keep track of the rest."}
+          </p>
+        </EmptyState>
       </div>
-    </div>
-  );
-}
-
-export const InventoryView: React.FC<InventoryViewProps> = ({
-  filteredItems,
-  onEditItem,
-  onDeleteItem,
-  onClearSearch,
-}) => {
-  const emptyState = (
-    <div className="py-24 md:py-48 flex flex-col items-center text-center px-4">
-      <SearchX size={64} className="md:w-20 md:h-20 text-zinc-800 mb-6 md:mb-8" />
-      <h3 className="text-xl md:text-3xl font-black text-white uppercase tracking-tighter">Null Result</h3>
-      <button
-        onClick={onClearSearch}
-        className="mt-6 md:mt-8 px-8 py-3.5 md:px-10 md:py-4 bg-zinc-900 border border-zinc-800 text-[#D4AF37] rounded-2xl font-black text-[10px] uppercase tracking-widest min-h-[44px]"
-      >
-        Clear Scan
-      </button>
-    </div>
-  );
-
+    );
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700 min-h-0 pb-8 md:pb-0">
-      <div className="mb-4">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter uppercase">Asset Ledger</h2>
-        <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em] mt-2 md:mt-3">Verified Local Records • {filteredItems.length} Entities</p>
-      </div>
-
-      {/* Mobile: card list */}
-      <div className="md:hidden">
-        <div className="bg-zinc-900/10 rounded-2xl md:rounded-[2.5rem] border border-zinc-800/50 shadow-2xl overflow-hidden">
-          {filteredItems.length > 0 ? (
-            <ul className="divide-y divide-zinc-800/50">
-              {filteredItems.map(item => (
-                <li key={item.id} className="p-4 active:bg-[#D4AF37]/[0.03] transition-colors">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-[#D4AF37] leading-none">{item.sku}</span>
-                      <span className="font-black text-white text-base tracking-tight break-words">{item.name}</span>
-                      <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">{item.category}</span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <StatusBadge item={item} />
-                      <VolumeBar item={item} />
-                      <span className="font-black text-[#D4AF37] text-lg tracking-tighter ml-auto">
-                        ${item.price.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-zinc-800/30">
-                      <button
-                        onClick={() => onEditItem(item)}
-                        className="min-h-[44px] min-w-[44px] p-3 text-zinc-500 hover:text-[#D4AF37] transition-all rounded-xl active:scale-95 flex items-center justify-center"
-                        aria-label="Edit"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => onDeleteItem(item.id)}
-                        className="min-h-[44px] min-w-[44px] p-3 text-zinc-500 hover:text-rose-500 transition-all rounded-xl active:scale-95 flex items-center justify-center"
-                        aria-label="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
+    <section aria-label="Inventory items" className="inventory-panel panel">
+      <div className="inventory-toolbar">
+        <div
+          className="search-wrap"
+          ref={searchRef}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setSuggestions(false);
+              setActive(-1);
+            }
+          }}
+        >
+          <Search size={18} aria-hidden="true" />
+          <label htmlFor="inventory-search" className="sr-only">
+            Search inventory by name, SKU, or category
+          </label>
+          <input
+            ref={inputRef}
+            id="inventory-search"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={open}
+            aria-controls={open ? "search-suggestions" : undefined}
+            aria-activedescendant={
+              open && active >= 0 ? `suggestion-${active}` : undefined
+            }
+            autoComplete="off"
+            value={filters.query}
+            onChange={(e) => {
+              setFilters({ ...filters, query: e.target.value });
+              setSuggestions(true);
+              setActive(-1);
+            }}
+            onFocus={() => setSuggestions(true)}
+            onKeyDown={keyDown}
+            placeholder="Search name, SKU, or category…"
+          />
+          {filters.query && (
+            <button
+              className="icon-button"
+              aria-label="Clear search"
+              onClick={() => {
+                setFilters({ ...filters, query: "" });
+                inputRef.current?.focus();
+              }}
+            >
+              <X size={17} />
+            </button>
+          )}
+          {open && (
+            <ul
+              id="search-suggestions"
+              role="listbox"
+              aria-label="Matching items"
+              className="suggestions"
+            >
+              {suggested.map((item, i) => (
+                <li
+                  key={item.id}
+                  role="option"
+                  id={`suggestion-${i}`}
+                  aria-selected={active === i}
+                  onPointerDown={(e) => e.preventDefault()}
+                  onClick={() => choose(item)}
+                  className={active === i ? "selected" : ""}
+                >
+                  <span>
+                    <strong>{item.name}</strong>
+                    <small>{item.category}</small>
+                  </span>
+                  <span className="sku">{item.sku}</span>
                 </li>
               ))}
             </ul>
-          ) : (
-            emptyState
           )}
         </div>
+        <div className="filters">
+          <label className="filter">
+            <SlidersHorizontal size={15} aria-hidden="true" />
+            <span className="sr-only">Filter by category</span>
+            <select
+              value={filters.category}
+              onChange={(e) =>
+                setFilters({ ...filters, category: e.target.value })
+              }
+            >
+              <option value="">All categories</option>
+              {categories.map((category) => (
+                <option key={category}>{category}</option>
+              ))}
+            </select>
+          </label>
+          <label className="filter">
+            <span className="sr-only">Filter by stock status</span>
+            <select
+              value={filters.stock}
+              onChange={(e) =>
+                setFilters({ ...filters, stock: e.target.value })
+              }
+            >
+              <option value="">All stock levels</option>
+              <option value="attention">Needs attention</option>
+              <option value="in">In stock</option>
+              <option value="low">Low stock</option>
+              <option value="out">Out of stock</option>
+            </select>
+          </label>
+          <label className="filter sort-filter">
+            <ArrowDownUp size={15} aria-hidden="true" />
+            <span className="sr-only">Sort inventory</span>
+            <select
+              value={filters.sort}
+              onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
+            >
+              <option value="name">Name A–Z</option>
+              <option value="quantity">Stock: low to high</option>
+              <option value="value">Value: high to low</option>
+              <option value="updated">Recently updated</option>
+            </select>
+          </label>
+        </div>
       </div>
-
-      {/* Desktop: table */}
-      <div className="hidden md:block bg-zinc-900/10 rounded-[2.5rem] border border-zinc-800/50 shadow-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          {filteredItems.length > 0 ? (
-            <table className="w-full text-left min-w-[800px]">
-              <thead className="bg-black/40 text-zinc-600 text-[9px] font-black uppercase tracking-[0.3em]">
-                <tr>
-                  <th className="px-10 py-6 border-b border-zinc-800/50">Entity Signature</th>
-                  <th className="px-10 py-6 border-b border-zinc-800/50">Status</th>
-                  <th className="px-10 py-6 border-b border-zinc-800/50 text-center">Volume</th>
-                  <th className="px-10 py-6 border-b border-zinc-800/50">Valuation</th>
-                  <th className="px-10 py-6 border-b border-zinc-800/50 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-900/30">
-                {filteredItems.map(item => (
-                  <tr key={item.id} className="group hover:bg-[#D4AF37]/[0.02] transition-colors">
-                    <td className="px-10 py-8">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-[#D4AF37] mb-2 leading-none">{item.sku}</span>
-                        <span className="font-black text-white text-lg tracking-tight group-hover:text-[#D4AF37] transition-colors truncate max-w-[240px]">{item.name}</span>
-                        <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-1">{item.category}</span>
+      <div className="results-meta">
+        <span role="status">
+          {filtered.length} of {items.length} items
+          {stale ? " · Last known data" : ""}
+        </span>
+        {(filters.query || filters.category || filters.stock) && (
+          <button className="text-button" onClick={clear}>
+            Clear filters
+            <X size={14} />
+          </button>
+        )}
+      </div>
+      {!filtered.length ? (
+        <EmptyState
+          title="No items match your search."
+          kind="search"
+          action={
+            <button className="button secondary" onClick={clear}>
+              Clear search and filters
+            </button>
+          }
+        >
+          <p>Try another name or SKU, or broaden your filters.</p>
+        </EmptyState>
+      ) : (
+        <>
+          <table className="inventory-table">
+            <caption className="sr-only">
+              Inventory quantities, status, prices, and item actions
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Item</th>
+                <th scope="col">Category</th>
+                <th scope="col">Stock level</th>
+                <th scope="col" className="numeric">
+                  Unit price
+                </th>
+                <th scope="col" className="numeric">
+                  Total value
+                </th>
+                <th scope="col">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered
+                .slice((currentPage - 1) * 20, currentPage * 20)
+                .map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="item-identity">
+                        <span className="item-initial" aria-hidden="true">
+                          {item.name.slice(0, 1)}
+                        </span>
+                        <div>
+                          <button
+                            className="item-name"
+                            onClick={() => onEdit(item)}
+                            disabled={disabled}
+                          >
+                            {item.name}
+                          </button>
+                          <span className="sku">{item.sku}</span>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-10 py-8">
-                      <StatusBadge item={item} />
+                    <td>
+                      <span className="category-label">{item.category}</span>
                     </td>
-                    <td className="px-10 py-8 text-center">
-                      <VolumeBar item={item} />
+                    <td>
+                      <div className="stock-cell">
+                        <span>
+                          <strong>{number(item.quantity)}</strong>
+                          <small> units</small>
+                        </span>
+                        <StockBadge item={item} />
+                      </div>
                     </td>
-                    <td className="px-10 py-8">
-                      <span className="font-black text-[#D4AF37] text-xl tracking-tighter">${item.price.toLocaleString(undefined, { minimumFractionDigits: 1 })}</span>
+                    <td className="numeric">{money(item.price)}</td>
+                    <td className="numeric value-cell">
+                      {money(item.quantity * item.price)}
                     </td>
-                    <td className="px-10 py-8 text-right">
-                      <div className="flex items-center justify-end space-x-4">
-                        <button onClick={() => onEditItem(item)} className="p-3 text-zinc-500 hover:text-[#D4AF37] transition-all rounded-xl active:scale-90"><Edit2 size={16} /></button>
-                        <button onClick={() => onDeleteItem(item.id)} className="p-3 text-zinc-500 hover:text-rose-500 transition-all rounded-xl active:scale-90"><Trash2 size={16} /></button>
+                    <td>
+                      <div className="row-actions">
+                        <button
+                          className="icon-button"
+                          onClick={() => onEdit(item)}
+                          disabled={disabled}
+                          aria-label={`Edit ${item.name}`}
+                          title="Edit item"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          className="icon-button danger-icon"
+                          onClick={() => onDelete(item)}
+                          disabled={disabled}
+                          aria-label={`Delete ${item.name}`}
+                          title="Delete item"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          ) : (
-            emptyState
-          )}
-        </div>
-      </div>
-    </div>
+            </tbody>
+          </table>
+          <div className="inventory-cards">
+            {filtered
+              .slice((currentPage - 1) * 20, currentPage * 20)
+              .map((item) => (
+                <article className="inventory-card" key={item.id}>
+                  <div className="card-top">
+                    <div>
+                      <span className="sku">{item.sku}</span>
+                      <h2>{item.name}</h2>
+                      <span className="muted">{item.category}</span>
+                    </div>
+                    <StockBadge item={item} />
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>Quantity</dt>
+                      <dd>{number(item.quantity)} units</dd>
+                    </div>
+                    <div>
+                      <dt>Unit price</dt>
+                      <dd>{money(item.price)}</dd>
+                    </div>
+                    <div>
+                      <dt>Total value</dt>
+                      <dd>{money(item.quantity * item.price)}</dd>
+                    </div>
+                  </dl>
+                  <div className="card-actions">
+                    <button
+                      className="text-button"
+                      onClick={() => onEdit(item)}
+                      disabled={disabled}
+                    >
+                      <Pencil size={16} />
+                      Edit item
+                      <ArrowUpRight size={14} />
+                    </button>
+                    <button
+                      className="icon-button danger-icon"
+                      aria-label={`Delete ${item.name}`}
+                      onClick={() => onDelete(item)}
+                      disabled={disabled}
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+                </article>
+              ))}
+          </div>
+          <div className="pagination">
+            <span>
+              {Math.min((currentPage - 1) * 20 + 1, filtered.length)}–
+              {Math.min(currentPage * 20, filtered.length)} of{" "}
+              {number(filtered.length)}
+            </span>
+            <div>
+              <button
+                className="button secondary"
+                disabled={currentPage === 1}
+                onClick={() => setPage(currentPage - 1)}
+              >
+                Previous
+              </button>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                className="button secondary"
+                disabled={currentPage === totalPages}
+                onClick={() => setPage(currentPage + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
   );
-};
+}

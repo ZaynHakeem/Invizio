@@ -1,5 +1,5 @@
 {
   "name": "Invizio",
-  "description": "A premium, high-security local-first inventory management vault with advanced analytics and executive aesthetics.",
+  "description": "Inventory management with light and dark themes, stock alerts, and an isolated interactive demo. Account authentication is a frontend preview awaiting backend integration.",
   "requestFramePermissions": []
 }
