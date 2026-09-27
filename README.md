@@ -4,7 +4,7 @@ A React + TypeScript + Vite inventory tracker with an Express/Mongoose API. Acco
 
 ## Live demo
 
-**https://invizio.vercel.app/**
+Interactive demo (no account): try it [here](https://invizio.vercel.app/).
 
 ## Two URLs (local)
 
