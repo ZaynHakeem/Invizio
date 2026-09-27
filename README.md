@@ -2,7 +2,11 @@
 
 A React + TypeScript + Vite inventory tracker with an Express/Mongoose API. Accounts use **Supabase Auth**; product data lives in **MongoDB**, scoped per user.
 
-## Two URLs
+## Live demo
+
+Interactive demo (no account): **https://invizio.vercel.app/demo**
+
+## Two URLs (local)
 
 | URL | What it is |
 | --- | --- |
