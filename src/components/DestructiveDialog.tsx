@@ -15,6 +15,7 @@ export function DestructiveDialog({
   onDone,
   suspended,
   onSuspend,
+  mode = "demo",
 }: {
   item: InventoryItem | null;
   count: number;
@@ -25,11 +26,13 @@ export function DestructiveDialog({
   onDone: (message: string) => void;
   suspended: boolean;
   onSuspend: () => void;
+  mode?: "demo" | "api";
 }) {
   const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const reset = !item;
+  const clearToEmpty = mode === "api";
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (busy || pending || !online || (reset && confirmation !== "RESET"))
@@ -43,7 +46,9 @@ export function DestructiveDialog({
       onDone(
         item
           ? `${item.name} deleted.`
-          : "Inventory replaced with the demo items.",
+          : clearToEmpty
+            ? "Inventory cleared."
+            : "Inventory replaced with the demo items.",
       );
     } catch (failure) {
       if (failure instanceof RequestError && failure.kind !== "unknown")
@@ -59,7 +64,9 @@ export function DestructiveDialog({
       title={reset ? "Reset inventory?" : `Delete ${item.name}?`}
       subtitle={
         reset
-          ? "This replaces your entire inventory with the four demo items."
+          ? clearToEmpty
+            ? "This permanently removes every item from your inventory."
+            : "This replaces your entire inventory with the four demo items."
           : `${item.sku} · This cannot be undone.`
       }
       onClose={() => {
@@ -109,7 +116,9 @@ export function DestructiveDialog({
       <form id="destructive-form" onSubmit={submit}>
         <p>
           {reset
-            ? `All ${count} existing ${count === 1 ? "item" : "items"} and their details will be permanently removed. Only the four demo items will remain.`
+            ? clearToEmpty
+              ? `All ${count} existing ${count === 1 ? "item" : "items"} and their details will be permanently removed. Your inventory will be empty.`
+              : `All ${count} existing ${count === 1 ? "item" : "items"} and their details will be permanently removed. Only the four demo items will remain.`
             : `This removes ${item.name} and all its details from this inventory. It will no longer appear in stock alerts or totals.`}
         </p>
         {reset && (

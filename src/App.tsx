@@ -1,4 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
+import {
+  BrowserRouter,
+  Link,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
@@ -62,7 +77,10 @@ function Workspace({
           ? createDemoRepository(preview)
           : createHttpRepository({
               baseUrl: config.apiUrl,
-              accessToken: async () => session?.accessToken ?? null,
+              accessToken: async () =>
+                (await authAdapter.getSession())?.accessToken ??
+                session?.accessToken ??
+                null,
             }),
       ),
     [mode, preview, session],
@@ -183,7 +201,7 @@ function Workspace({
               <span className="tiny-dot" />
               {mode === "demo"
                 ? "Demo workspace"
-                : (session?.email ?? "Shared workspace")}
+                : (session?.email ?? "Your workspace")}
             </span>
             <div className="mobile-theme">
               <ThemeSelect />
@@ -234,6 +252,9 @@ function Workspace({
             <span className="preview-state-hint" id="preview-state-hint">
               Changing state resets demo changes.
             </span>
+            <Link className="text-button" to="/">
+              Sign in
+            </Link>
           </div>
         )}
         <main id="main" className="main-content" tabIndex={-1}>
@@ -427,6 +448,7 @@ function Workspace({
           store={store}
           pending={state.pending}
           online={online}
+          mode={mode}
           onClose={() => {
             setDestructive(null);
             setSuspended(false);
@@ -470,12 +492,12 @@ function Workspace({
                   ? "Demo workspace"
                   : session
                     ? session.email
-                    : "Connected workspace"}
+                    : "Your workspace"}
               </h3>
               <p>
                 {mode === "demo"
                   ? "Sample inventory is kept in memory. Leaving resets your changes."
-                  : "Inventory changes are saved to your connected server."}
+                  : "Inventory changes are saved to your private MongoDB inventory."}
               </p>
             </div>
           </div>
@@ -483,7 +505,9 @@ function Workspace({
             <h3>Reset inventory</h3>
             <p>
               {items
-                ? `Replace all ${items.length} items with the four original demo items. This cannot be undone.`
+                ? mode === "demo"
+                  ? `Replace all ${items.length} items with the four original demo items. This cannot be undone.`
+                  : `Permanently remove all ${items.length} items. Your inventory will be empty.`
                 : "Load inventory before resetting it."}
             </p>
             <button
@@ -505,13 +529,13 @@ function Workspace({
             }}
           >
             <LogOut size={16} />
-            {mode === "demo" ? "Leave demo" : "Leave workspace"}
+            {mode === "demo" ? "Leave demo" : "Sign out"}
           </button>
         </Dialog>
       )}
       {exitConfirm && (
         <Dialog
-          title={mode === "demo" ? "Leave the demo?" : "Leave this workspace?"}
+          title={mode === "demo" ? "Leave the demo?" : "Sign out?"}
           onClose={() => setExitConfirm(false)}
           footer={
             <>
@@ -522,7 +546,7 @@ function Workspace({
                 Stay here
               </button>
               <button className="button primary" onClick={onExit}>
-                Leave workspace
+                {mode === "demo" ? "Leave demo" : "Sign out"}
                 <ArrowRight size={16} />
               </button>
             </>
@@ -531,7 +555,7 @@ function Workspace({
           <p>
             {mode === "demo"
               ? "Your demo changes will be cleared. You can explore a fresh sample inventory whenever you return."
-              : "Your confirmed inventory changes are saved. You’ll return to the sign-in page."}
+              : "Your inventory stays saved. You’ll return to the sign-in page."}
           </p>
         </Dialog>
       )}
@@ -539,36 +563,207 @@ function Workspace({
     </div>
   );
 }
+
 function CheckIcon() {
   return <ArrowRight size={16} aria-hidden="true" />;
 }
-export default function App() {
-  const [mode, setMode] = useState<"demo" | "api" | null>(null);
-  const [session, setSession] = useState<AuthSession | null>(null);
+
+function DemoRoute() {
+  const navigate = useNavigate();
   return (
-    <ThemeProvider>
+    <Workspace
+      mode="demo"
+      session={null}
+      onExit={() => {
+        document.title = "Invizio · Inventory, in order";
+        navigate("/");
+      }}
+    />
+  );
+}
+
+function recoveryLinkPresent() {
+  const value = `${window.location.search}${window.location.hash}`;
+  return /(?:^|[?&#])type=recovery(?:&|$)/.test(value);
+}
+
+function NewPassword({
+  onDone,
+  onCancel,
+}: {
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    if (password.length < 8) {
+      setError("Use at least 8 characters.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await authAdapter.updatePassword(password);
+      onDone();
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "We could not update your password. Please try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="auth-page">
+      <main className="auth-layout">
+        <section className="auth-form-section">
+          <div className="auth-form-wrap">
+            <span className="eyebrow">Password recovery</span>
+            <h2>Choose a new password.</h2>
+            <p className="muted">
+              This reset link signed you in. Set a new password before opening
+              your inventory.
+            </p>
+            <form noValidate onSubmit={submit} className="auth-form">
+              <div className="field">
+                <label htmlFor="new-password">New password</label>
+                <input
+                  id="new-password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    setError("");
+                  }}
+                  disabled={busy}
+                  aria-invalid={!!error}
+                  required
+                />
+                <span className="field-hint">At least 8 characters.</span>
+              </div>
+              {error && (
+                <div className="notice error" role="alert">
+                  {error}
+                </div>
+              )}
+              <button className="button primary full" disabled={busy}>
+                {busy ? <Spinner /> : "Update password"}
+              </button>
+            </form>
+            <button
+              type="button"
+              className="text-button auth-forgot"
+              onClick={onCancel}
+              disabled={busy}
+            >
+              Back to sign in
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function AppRoute() {
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [recovery, setRecovery] = useState(recoveryLinkPresent);
+  const [ready, setReady] = useState(!authAdapter.configured);
+
+  useEffect(() => {
+    if (!authAdapter.configured) return;
+    let cancelled = false;
+    void authAdapter.getSession().then((value) => {
+      if (!cancelled) {
+        setSession(value);
+        setReady(true);
+      }
+    });
+    const unsubscribe = authAdapter.onSessionChange((value, event) => {
+      if (event === "PASSWORD_RECOVERY") setRecovery(true);
+      setSession(value);
+      setReady(true);
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  if (!ready) {
+    return (
+      <div className="auth-page" aria-busy="true">
+        <div className="auth-form-wrap" style={{ margin: "auto" }}>
+          <Spinner label="Checking your session…" />
+        </div>
+      </div>
+    );
+  }
+
+  if (recovery) {
+    return (
+      <NewPassword
+        onDone={() => setRecovery(false)}
+        onCancel={() => {
+          setRecovery(false);
+          void authAdapter.signOut();
+          setSession(null);
+        }}
+      />
+    );
+  }
+
+  if (!session) {
+    return (
+      <AuthScreen
+        onSession={(value) => {
+          setSession(value);
+          document.title = "Overview · Invizio";
+        }}
+      />
+    );
+  }
+
+  return (
+    <Workspace
+      mode="api"
+      session={session}
+      onExit={() => {
+        void authAdapter.signOut();
+        setSession(null);
+        document.title = "Invizio · Inventory, in order";
+      }}
+    />
+  );
+}
+
+export function AppShell() {
+  return (
+    <>
       <MobileSplash />
-      {mode ? (
-        <Workspace
-          mode={mode}
-          session={session}
-          onExit={() => {
-            void authAdapter.signOut();
-            setSession(null);
-            setMode(null);
-            document.title = "Invizio · Inventory, in order";
-          }}
-        />
-      ) : (
-        <AuthScreen
-          onDemo={() => setMode("demo")}
-          onConnected={() => setMode("api")}
-          onSession={(value) => {
-            setSession(value);
-            setMode("api");
-          }}
-        />
-      )}
-    </ThemeProvider>
+      <Routes>
+        <Route path="/demo" element={<DemoRoute />} />
+        <Route path="/" element={<AppRoute />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ThemeProvider>
+        <AppShell />
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }

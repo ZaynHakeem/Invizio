@@ -117,23 +117,17 @@ These scenarios are deterministic and are not real API error injection. The HTTP
 
 ## Auth integration boundary
 
-`src/auth/adapter.ts` defines sign-in, sign-up, recovery, sign-out, and a session containing an email and access token. The supplied adapter is explicitly unconfigured and rejects account submissions with clear copy. No password is persisted, no fake account/session is generated, and no reset-email success is invented.
+`src/auth/adapter.ts` defines sign-in, sign-up, recovery, sign-out, session restore, and a session containing an email and access token. When `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set, the adapter uses Supabase Auth. Otherwise it stays unconfigured and rejects submissions without sending credentials.
 
-To integrate MongoDB-backed accounts or Supabase:
+`/` is the real app (auth required). `/demo` is the in-memory demo. Express `/api/items` routes require a Supabase JWT (`server/auth.ts`) and scope documents by `userId`. Factory reset for authenticated users clears their inventory to `[]`. See `docs/SUPABASE.md`.
 
-1. Replace the adapter implementation with the chosen provider and mark it configured.
-2. Return a real session, or a genuine verification-required signup result. The HTTP repository accepts an access-token callback; attach refresh/session restoration as appropriate to the provider.
-3. Implement and verify authentication and item ownership on the server (or corresponding Supabase policies). The frontend token header alone does not protect any existing route.
-4. Remove the temporary connected-workspace entry. It exists only behind `VITE_ENABLE_API_WORKSPACE=true` for local use of the existing unauthenticated API.
-5. Test expiry, recovery, verification, logout, rejected access, and per-user isolation end to end.
-
-Only appearance is written to localStorage. SessionStorage stores the once-per-tab splash marker. Demo inventory, form drafts, and the placeholder auth values remain in memory.
+Only appearance is written to localStorage. SessionStorage stores the once-per-tab splash marker. Demo inventory and form drafts remain in memory. Supabase persists its own auth session in the browser.
 
 ## Validation completed
 
-- **31 passing tests:** schema/stock boundaries, read retries/timeouts/cancellation/cooldowns, write ambiguity and inline errors, stale snapshot preservation, write-success/read-failure separation, response races, uncertain create/update/delete/reset reconciliation, correct empty/healthy wording, and navigation counts.
+- **38 passing tests:** schema/stock boundaries, read retries/timeouts/cancellation/cooldowns, write ambiguity and inline errors, stale snapshot preservation, write-success/read-failure separation, response races, uncertain create/update/delete/reset reconciliation, correct empty/healthy wording, navigation counts, JWKS auth, per-user item isolation, and unique SKU creation.
 - DOM interactions cover account-preview validation, preserved drafts through theme changes, description create/edit, preview error vs empty, reopening and resolving a timed-out edit, confirmed-save/failed-refresh feedback, named deletion, and typed reset confirmation.
-- Strict TypeScript checks pass for frontend and unchanged server.
+- Strict TypeScript checks pass for the frontend and the server. `server/auth.ts` verifies Supabase access tokens with the project JWKS (issuer and audience included). `server/routes/items.ts` scopes items by user, retries duplicate SKUs, and rejects item fields the form would reject.
 - Production Vite build succeeds. The Recharts module is loaded separately when the dashboard needs it; its footprint does not block the account entry screen. Chart space is reserved; category values are also available as accessible text.
 - Semantic foreground/background and control-boundary contrast values were measured from the implemented tokens.
 - No live inventory API or MongoDB database was mutated for these checks.

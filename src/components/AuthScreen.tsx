@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Check,
@@ -9,16 +10,11 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { authAdapter, type AuthSession } from "../auth/adapter";
-import { Brand, Dialog, Spinner, ThemeSelect } from "./UI";
-import { config } from "../config";
+import { Brand, Spinner, ThemeSelect } from "./UI";
 
 export function AuthScreen({
-  onDemo,
-  onConnected,
   onSession,
 }: {
-  onDemo: () => void;
-  onConnected: () => void;
   onSession: (session: AuthSession) => void;
 }) {
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
@@ -32,7 +28,6 @@ export function AuthScreen({
     form?: string;
   }>({});
   const [notice, setNotice] = useState("");
-  const [confirmConnected, setConfirmConnected] = useState(false);
   function changeMode(next: typeof mode) {
     setMode(next);
     setErrors({});
@@ -167,9 +162,9 @@ export function AuthScreen({
               <div className="auth-preview-note">
                 <ShieldCheck size={18} aria-hidden="true" />
                 <p>
-                  <strong>Account preview</strong>Accounts aren’t connected yet.
-                  These fields are for the preview; no credentials are sent or
-                  saved.
+                  <strong>Accounts not connected yet.</strong> Add your Supabase
+                  keys to <code>.env</code> to enable sign-in. Until then, no
+                  credentials are sent or saved.
                 </p>
               </div>
             )}
@@ -312,28 +307,19 @@ export function AuthScreen({
               </button>
             </p>
             <div className="auth-divider">
-              <span>Take a look around</span>
+              <span>Just looking around?</span>
             </div>
-            <button
-              className="button secondary full"
-              onClick={onDemo}
-              disabled={busy}
-            >
-              Try the demo
+            <Link className="button secondary full" to="/demo">
+              Explore the demo
               <ArrowRight size={17} />
-            </button>
+            </Link>
             <p className="micro centered">
-              Sample inventory. No signup. Changes stay in this tab until you
-              leave.
+              Sample inventory at{" "}
+              <Link className="text-button" to="/demo">
+                /demo
+              </Link>
+              . No signup. Changes stay in this tab.
             </p>
-            {config.enableApiWorkspace && !authAdapter.configured && (
-              <button
-                className="text-button connected-link"
-                onClick={() => setConfirmConnected(true)}
-              >
-                Open connected inventory
-              </button>
-            )}
             <p className="auth-trust">
               <LockKeyhole size={14} aria-hidden="true" />
               Appearance is saved on this device. Passwords are not.
@@ -345,36 +331,6 @@ export function AuthScreen({
         <span>Invizio · A little order. A lot of clarity.</span>
         <span>Built for the business you’re building.</span>
       </footer>
-      {confirmConnected && (
-        <Dialog
-          title="Open connected inventory?"
-          subtitle="This existing workspace does not require an account yet."
-          onClose={() => setConfirmConnected(false)}
-          footer={
-            <>
-              <button
-                className="button secondary"
-                onClick={() => setConfirmConnected(false)}
-              >
-                Go back
-              </button>
-              <button className="button primary" onClick={onConnected}>
-                Open workspace
-                <ArrowRight size={16} />
-              </button>
-            </>
-          }
-        >
-          <p>
-            This opens the inventory connected to your configured server.
-            Changes here are saved to that shared inventory.
-          </p>
-          <p className="muted mt-4">
-            Account access and private inventories will be available after
-            authentication is connected.
-          </p>
-        </Dialog>
-      )}
     </div>
   );
 }

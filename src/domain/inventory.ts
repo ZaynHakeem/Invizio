@@ -28,10 +28,24 @@ export const time = (value: number | string) =>
     minute: "2-digit",
   }).format(new Date(value));
 
+export const itemTextLimits = {
+  name: 120,
+  category: 60,
+  description: 2000,
+} as const;
+
 export function validateInput(input: ItemInput): FieldErrors {
   const errors: FieldErrors = {};
-  if (!input.name.trim()) errors.name = "Enter an item name.";
-  if (!input.category.trim()) errors.category = "Enter or choose a category.";
+  const name = input.name.trim();
+  const category = input.category.trim();
+  if (!name) errors.name = "Enter an item name.";
+  else if (name.length > itemTextLimits.name)
+    errors.name = `Use a name of ${itemTextLimits.name} characters or fewer.`;
+  if (!category) errors.category = "Enter or choose a category.";
+  else if (category.length > itemTextLimits.category)
+    errors.category = `Use a category of ${itemTextLimits.category} characters or fewer.`;
+  if (input.description.length > itemTextLimits.description)
+    errors.description = `Use a description of ${itemTextLimits.description} characters or fewer.`;
   for (const [key, label] of [
     ["quantity", "Quantity"],
     ["minStockLevel", "Minimum stock level"],

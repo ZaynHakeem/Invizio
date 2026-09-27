@@ -1,5 +1,5 @@
 {
   "name": "Invizio",
-  "description": "Inventory management with light and dark themes, stock alerts, and an isolated interactive demo. Account authentication is a frontend preview awaiting backend integration.",
+  "description": "Inventory management with light and dark themes, stock alerts, and an isolated interactive demo. Accounts use Supabase Auth; each user's items are stored in MongoDB.",
   "requestFramePermissions": []
 }

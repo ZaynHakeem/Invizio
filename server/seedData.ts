@@ -1,3 +1,7 @@
+import { randomInt } from 'node:crypto';
+
+const SKU_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
 export const INITIAL_DATA = [
   { id: '1', sku: 'IV-772', name: 'Wireless Mouse', category: 'Electronics', quantity: 12, price: 45.00, description: 'Ergonomic 2.4GHz wireless mouse with precision optical tracking', minStockLevel: 5, updatedAt: new Date().toISOString() },
   { id: '2', sku: 'IV-104', name: 'Pasta', category: 'Groceries', quantity: 84, price: 2.99, description: 'Premium Italian durum wheat pasta, 500g package', minStockLevel: 20, updatedAt: new Date().toISOString() },
@@ -10,7 +14,11 @@ function generateId(): string {
 }
 
 function generateSku(): string {
-  return `IV-${Math.floor(100 + Math.random() * 899)}`;
+  let body = '';
+  for (let index = 0; index < 10; index += 1) {
+    body += SKU_ALPHABET[randomInt(SKU_ALPHABET.length)];
+  }
+  return `IV-${body}`;
 }
 
 export function createNewItem(partial: {

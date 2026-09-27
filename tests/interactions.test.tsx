@@ -30,6 +30,7 @@ Object.assign(globalThis, {
   requestAnimationFrame: window.requestAnimationFrame.bind(window),
   cancelAnimationFrame: window.cancelAnimationFrame.bind(window),
 });
+await import("react-router-dom");
 const { createRoot } = await import("react-dom/client");
 const { default: App } = await import("../src/App");
 let root: ReturnType<typeof createRoot>;
@@ -41,12 +42,16 @@ beforeEach(() => {
 });
 afterEach(async () => {
   await act(async () => root.unmount());
-  await window.happyDOM.cancelAsync();
+  await Promise.race([
+    window.happyDOM.cancelAsync(),
+    new Promise<void>((resolve) => setTimeout(resolve, 50)),
+  ]);
 });
-after(async () => {
-  await window.happyDOM.close();
+after(() => {
+  void window.happyDOM.close();
 });
-async function render() {
+async function render(path = "/") {
+  window.happyDOM.setURL(`http://localhost:5173${path}`);
   await act(async () => {
     root.render(
       <StrictMode>
@@ -117,10 +122,10 @@ test("account preview validates inline and never creates a fake session", async 
   assert.doesNotMatch(text(), /A little order. A lot of clarity.Here/);
   assert.equal(window.localStorage.getItem("password"), null);
   assert.ok(document.querySelector(".auth-form"));
+  assert.ok(document.querySelector('a[href="/demo"]'));
 });
 test("switching theme preserves draft fields; failed validation keeps description", async () => {
-  await render();
-  await click("Try the demo");
+  await render("/demo");
   await click("Add item");
   await fill("#item-name", "Desk lamp");
   await fill("#item-description", "Warm white bulb included.");
@@ -144,8 +149,7 @@ test("switching theme preserves draft fields; failed validation keeps descriptio
   assert.ok(document.querySelector("dialog[open]"));
 });
 test("demo create and edit persist every field and report success", async () => {
-  await render();
-  await click("Try the demo");
+  await render("/demo");
   await click("Add item");
   await fill("#item-name", "Desk lamp");
   await select("#item-category", "Electronics");
@@ -174,8 +178,7 @@ test("demo create and edit persist every field and report success", async () => 
   assert.match(text(), /Desk lamp updated/);
 });
 test("preview initial failure and empty success never collapse into the same screen", async () => {
-  await render();
-  await click("Try the demo");
+  await render("/demo");
   await click("Inventory");
   await select("#preview-state", "initial-error");
   assert.match(text(), /Your inventory couldn’t be loaded/);
@@ -194,8 +197,7 @@ test("preview initial failure and empty success never collapse into the same scr
   assert.match(text(), /Denim Jeans/);
 });
 test("timed-out edit retains its draft when closed, then resolves by a read", async () => {
-  await render();
-  await click("Try the demo");
+  await render("/demo");
   await select("#preview-state", "save-timeout");
   await click("Inventory");
   await click("Wireless Mouse");
@@ -217,8 +219,7 @@ test("timed-out edit retains its draft when closed, then resolves by a read", as
   assert.match(text(), /The latest item matches your changes/);
 });
 test("confirmed save with failed reload closes the form and reports stale data", async () => {
-  await render();
-  await click("Try the demo");
+  await render("/demo");
   await select("#preview-state", "saved-stale");
   await click("Inventory");
   await click("Wireless Mouse");
@@ -232,8 +233,7 @@ test("confirmed save with failed reload closes the form and reports stale data",
 });
 
 test("delete names the item and requires an explicit confirmation", async () => {
-  await render();
-  await click("Try the demo");
+  await render("/demo");
   await click("Inventory");
   await act(async () => {
     document
@@ -261,8 +261,7 @@ test("delete names the item and requires an explicit confirmation", async () => 
 });
 
 test("factory reset is disabled until RESET is typed and replaces the sample inventory", async () => {
-  await render();
-  await click("Try the demo");
+  await render("/demo");
   await click("Settings");
   await click("Factory reset");
   assert.match(

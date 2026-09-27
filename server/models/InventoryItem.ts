@@ -3,6 +3,7 @@ import mongoose, { Schema, Model } from 'mongoose';
 export interface IInventoryItem {
   _id: string;
   id: string;
+  userId: string;
   sku: string;
   name: string;
   category: string;
@@ -16,7 +17,8 @@ export interface IInventoryItem {
 const inventoryItemSchema = new Schema<IInventoryItem>(
   {
     _id: { type: String, required: true },
-    id: { type: String, required: true, unique: true },
+    id: { type: String, required: true },
+    userId: { type: String, required: true, index: true },
     sku: { type: String, required: true },
     name: { type: String, required: true },
     category: { type: String, required: true },
@@ -28,6 +30,9 @@ const inventoryItemSchema = new Schema<IInventoryItem>(
   },
   { id: false }
 );
+
+inventoryItemSchema.index({ userId: 1, id: 1 }, { unique: true });
+inventoryItemSchema.index({ userId: 1, sku: 1 }, { unique: true });
 
 export const InventoryItemModel: Model<IInventoryItem> =
   mongoose.models.InventoryItem ?? mongoose.model<IInventoryItem>('InventoryItem', inventoryItemSchema);
