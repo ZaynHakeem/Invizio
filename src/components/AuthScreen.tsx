@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { CognitoLoginButton } from "./CognitoLoginButton";
 import {
   ArrowRight,
   Check,
@@ -306,6 +307,7 @@ export function AuthScreen({
                 {mode === "login" ? "Create an account" : "Sign in"}
               </button>
             </p>
+            <CognitoLoginButton />
             <div className="auth-divider">
               <span>Just looking around?</span>
             </div>
