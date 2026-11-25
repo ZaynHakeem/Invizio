@@ -8,6 +8,7 @@ const API_URL =
 export function CognitoLoginButton() {
   const auth = useAuth();
   const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function testProtectedApi() {
     const token = auth.user?.access_token;
@@ -16,6 +17,8 @@ export function CognitoLoginButton() {
       setResult("No Cognito access token available.");
       return;
     }
+
+    setLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/api/items`, {
@@ -26,22 +29,60 @@ export function CognitoLoginButton() {
 
       const data = await response.json();
 
-      setResult(
-        JSON.stringify(
-          {
-            status: response.status,
-            data,
-          },
-          null,
-          2
-        )
-      );
+      setResult(JSON.stringify({
+        operation: "GET inventory",
+        status: response.status,
+        data,
+      }, null, 2));
     } catch (error) {
-      setResult(
-        error instanceof Error
-          ? error.message
-          : "Request failed"
-      );
+      setResult(error instanceof Error ? error.message : "Request failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function testCreateItem() {
+    const token = auth.user?.access_token;
+
+    if (!token) {
+      setResult("No Cognito access token available.");
+      return;
+    }
+
+    setLoading(true);
+
+    const newItem = {
+      sku: `POST-${Date.now()}`,
+      name: "AWS Created Test Item",
+      category: "Testing",
+      quantity: 10,
+      price: 49.99,
+      description: "Created through the authenticated AWS POST API",
+      minStockLevel: 2,
+    };
+
+    try {
+      const response = await fetch(`${API_URL}/api/items`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newItem),
+      });
+
+      const data = await response.json();
+
+      setResult(JSON.stringify({
+        operation: "POST create inventory item",
+        status: response.status,
+        submittedItem: newItem,
+        data,
+      }, null, 2));
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : "Request failed");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -64,10 +105,22 @@ export function CognitoLoginButton() {
         <button
           type="button"
           className="button secondary full"
+          disabled={loading}
           onClick={() => void testProtectedApi()}
         >
-          Test protected AWS API
+          Test protected AWS API (GET)
         </button>
+
+        <button
+          type="button"
+          className="button secondary full"
+          disabled={loading}
+          onClick={() => void testCreateItem()}
+        >
+          Create test inventory item (POST)
+        </button>
+
+        {loading && <p>Talking to AWS...</p>}
 
         {result && <pre>{result}</pre>}
 
